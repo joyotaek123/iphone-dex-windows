@@ -1,0 +1,72 @@
+name: Build iOS Host IPA
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'ios-host/**'
+      - '.github/workflows/build-ios-ipa.yml'
+  pull_request:
+    paths:
+      - 'ios-host/**'
+      - '.github/workflows/build-ios-ipa.yml'
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    name: Build Unsigned iPhoneDeXHost.ipa
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          echo "Using Xcode: $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: ios-host
+        run: xcodegen generate
+
+      - name: Build unsigned Release .app (iphoneos)
+        working-directory: ios-host
+        run: |
+          xcodebuild \
+            -project iPhoneDeXHost.xcodeproj \
+            -scheme iPhoneDeXHost \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            ONLY_ACTIVE_ARCH=NO \
+            build
+
+      - name: Package .app into unsigned .ipa
+        working-directory: ios-host/build
+        run: |
+          APP_PATH="Build/Products/Release-iphoneos/iPhoneDeXHost.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Error: $APP_PATH not found"
+            exit 1
+          fi
+          rm -rf Payload iPhoneDeXHost-unsigned.ipa
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry iPhoneDeXHost-unsigned.ipa Payload
+          ls -lh iPhoneDeXHost-unsigned.ipa
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iPhoneDeXHost-unsigned-ipa
+          path: ios-host/build/iPhoneDeXHost-unsigned.ipa
+          if-no-files-found: error

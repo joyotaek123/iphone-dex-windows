@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+dist/
+build/
+*.spec
+
+# Apple / Xcode / iOS
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+ios-host/build/
+.DS_Store
+
+# IDE & Logs
+.vscode/
+.idea/
+*.log
