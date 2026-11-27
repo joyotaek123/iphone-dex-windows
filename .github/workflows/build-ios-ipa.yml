@@ -58,6 +58,11 @@ jobs:
             echo "Error: $APP_PATH not found"
             exit 1
           fi
+          plutil -p "$APP_PATH/Info.plist"
+          if ! plutil -p "$APP_PATH/Info.plist" | grep -q "UIApplicationSceneManifest"; then
+            echo "Error: Info.plist is missing UIApplicationSceneManifest!"
+            exit 1
+          fi
           rm -rf Payload iPhoneDeXHost-unsigned.ipa
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/

@@ -15,6 +15,7 @@ final class DesktopHostViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        UIApplication.shared.isIdleTimerDisabled = true
         view.backgroundColor = UIColor(red: 0.03, green: 0.04, blue: 0.07, alpha: 1.0)
         setupLayout()
         wireServerCallbacks()
